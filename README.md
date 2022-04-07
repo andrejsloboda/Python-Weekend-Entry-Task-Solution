@@ -332,7 +332,7 @@ python -m solution example0.csv WIW RFZ --bags 1 --return
 
 ---
 ## Requirements
-This solution doesn't require the installation of any packages and should run on Python version 3.7 and earlier. 
+This solution doesn't require the installation of any packages and should run on Python version 3.7 and later. 
 ## References
 Here you can find the resources I used to create this solution and learn Python.
 ### Courses  
