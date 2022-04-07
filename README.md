@@ -58,7 +58,7 @@ optional arguments to adjust output based on user preferences:
 | `origin`       | string  | Origin airport IATA code      |                              |
 | `destination`  | string  | Destination airport IATA code |                              |
 | `--bags`       | integer | Number of requested bags      | Optional (defaults to 0)     |
-| `--return`     | boolean | Return flight                 | Optional (defaults to false) |
+| `--return_flight`     | boolean | Return flight                 | Optional (defaults to false) |
 | `--stay`       | integer | Minimum number of hours to stay  | Optional (defaults to1) |  
 | `--max_layover`| integer | Maximum layover time between flights in hours   | Optional (defaults to 6)|
 
