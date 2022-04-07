@@ -338,6 +338,7 @@ Here you can find resources I used to create this solution and learn Python.
 ### Courses  
 [Advanced Algorithmics and Graph Theory with Python(edx.org)](https://www.edx.org/course/advanced-algorithmics-and-graph-theory-with-python?index=product&queryID=893e87e57219aba67fcb783155865580&position=1)  
 [Intro to Data Structures and Algorithms(Udacity.com)](https://www.udacity.com/course/data-structures-and-algorithms-in-python--ud513)  
+[Objektové programovanie v Pythone(skillmea.sk)](https://skillmea.sk/kurzy/objektove-programovanie-v-pythone)  
 ### Books  
 [Learn Python Programming - Third Edition(Packt)](https://www.packtpub.com/product/learn-python-programming-third-edition/9781801815093)  
 [Python Object-Oriented Programming - Fourth Edition(Packt)](https://www.packtpub.com/product/python-object-oriented-programming-fourth-edition/9781801077262) 
