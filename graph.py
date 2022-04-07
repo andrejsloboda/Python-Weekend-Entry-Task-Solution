@@ -76,7 +76,7 @@ class Graph:
                    'base_price', 'bag_price', 'bags_allowed']
         fieldnames = flights.fieldnames
 
-        # Initialize regex to check correct format of flight_no, origin and destination.
+        # Initialize regex to check the correct flight_no, origin, and destination format.
         flight_no_re = re.compile(r"[A-Z]{2}[0-9]{3}")
         origin_re = re.compile(r"[A-Z]{3}")
         destination_re = re.compile(r"[A-Z]{3}")
