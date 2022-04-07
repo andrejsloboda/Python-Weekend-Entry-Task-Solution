@@ -11,7 +11,7 @@
 
 ## Description
 
-This project is a solution to the Python Weekend entry task. It reads arguments from the console, loads data from the dataset in the CSV file, and constructs graph data structure from the data. Then it implements a breadth-first search algorithm to find every possible combination of flights from origin to destination airport based on user preferences. Subsequently, prints found routes in JSON format to the console.
+This project is a solution to the Python Weekend [entry task](https://github.com/kiwicom/python-weekend-entry-task). It reads arguments from the console, loads data from the dataset in the CSV file, and constructs graph data structure from the data. Then it implements a breadth-first search algorithm to find every possible combination of flights from origin to destination airport based on user preferences. Subsequently, prints found routes in JSON format to the console.
 
 ### Dataset
 The dataset consists of semi-randomly generated data about flights with the following columns:
@@ -332,9 +332,9 @@ python -m solution example0.csv WIW RFZ --bags 1 --return
 
 ---
 ## Requirements
-This solution doesn't require installation of any packages and should run on Python version 3.7 and earlier.  
+This solution doesn't require the installation of any packages and should run on Python version 3.7 and earlier. 
 ## References
-Here you can find resources I used to create this solution and learn Python.
+Here you can find the resources I used to create this solution and learn Python.
 ### Courses  
 [Advanced Algorithmics and Graph Theory with Python(edx.org)](https://www.edx.org/course/advanced-algorithmics-and-graph-theory-with-python?index=product&queryID=893e87e57219aba67fcb783155865580&position=1)  
 [Intro to Data Structures and Algorithms(Udacity.com)](https://www.udacity.com/course/data-structures-and-algorithms-in-python--ud513)  
