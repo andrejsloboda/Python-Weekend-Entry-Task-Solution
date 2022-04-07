@@ -1,13 +1,15 @@
+from typing import List
 from routes import Route, RouteOutput
 from collections import namedtuple
 from datetime import datetime, timedelta
 import re
 import json
 
-
 class Node:
-    """ This class represents single flight."""
-
+    """ 
+    This class represents node of graph that contains
+    information about single flight.
+    """
     def __init__(self, flight: namedtuple):
         self.flight_no = flight.flight_no
         self.origin = flight.origin
@@ -19,15 +21,11 @@ class Node:
         self.bags_allowed = flight.bags_allowed
         self._edges = list()
 
+    def add_nbr(self, nbr):
+        self._edges.append(nbr)
+
     def __iter__(self):
         return iter(self._edges)
-
-    def add_nbr(self, nbr):
-        self._edges.append(Edge(self, nbr))
-
-    def __repr__(self):
-        return "(Node, origin: {}, destination: {}, dep: {},arr: {})"\
-            .format(self.origin, self.destination, self.departure, self.arrival)
 
     def as_dict(self):
         return {
@@ -42,41 +40,32 @@ class Node:
         }
 
 
-class Edge:
-    """ This class represents an Edge """
-
-    def __init__(self, node_from: Node, node_to: Node):
-        self.node_from = node_from
-        self.node_to = node_to
-        self.bags_allowed = self.get_bags_allowed(self.node_from, self.node_to)
-
-    @staticmethod
-    def get_layover_time(node_from: Node, node_to: Node):
-        return node_to.arrival - node_from.departure
-
-    @staticmethod
-    def get_bags_allowed(node_from: Node, node_to: Node):
-        return min([node_from.bags_allowed, node_to.bags_allowed])
-
-
 class Graph:
+    """ 
+    A class representing graph data structure. Nodes are represented
+    as a single flight. This class contains methods for parsing input
+    data, constructing graph data structure and performing search for
+    flight routes.
+    """
     def __init__(self, flights, max_layover: int = 6) -> None:
         self._nodes = list()
         self._flights = list()
+        self._airport_index = list()
         self._parse_input_data(flights)
         self._create_graph(max_layover)
 
     def _parse_input_data(self, flights):
-        """ This function checks if the input file has 
-        correct column names and correct format of input data. Afterwards
-        it parses input data and stores it in dict data structure."""
-
+        """ 
+        This function checks if the input file has 
+        correct column names and correct format of input data. 
+        Afterwards it parses input data and stores it in list.
+        """
         # Initialize list with correct column names and get actual column names from csv file.
         columns = ['flight_no', 'origin', 'destination', 'departure', 'arrival',
                    'base_price', 'bag_price', 'bags_allowed']
         fieldnames = flights.fieldnames
 
-        # Initialize regex to check the correct flight_no, origin, and destination format.
+        # Initialize regex to check the flight_no, origin, and destination format.
         flight_no_re = re.compile(r"[A-Z]{2}[0-9]{3}")
         origin_re = re.compile(r"[A-Z]{3}")
         destination_re = re.compile(r"[A-Z]{3}")
@@ -89,7 +78,6 @@ class Graph:
                 raise ValueError('Column name "{}" should be "{}."'.format(fn, col))
 
         for f in flights:
-
             flight_data = namedtuple('Flight', 'flight_no origin destination departure\
                                         arrival base_price bag_price bags_allowed')
 
@@ -115,6 +103,13 @@ class Graph:
                 flight_data.bags_allowed = int(f['bags_allowed'])
 
                 self._flights.append(flight_data)
+
+                if f['origin'] not in self._airport_index:
+                    self._airport_index.append(f['origin'])
+
+                if f['destination'] not in self._airport_index:
+                    self._airport_index.append(f['destination'])
+
             except ValueError:
                 raise ValueError('Please check the formats in csv file: \n \
                             departure: YYYY-mm-ddTHH:MM:SS \n \
@@ -134,55 +129,67 @@ class Graph:
                 self._add_edge(node_a, node_b, max_layover)
 
     def _add_node(self, node: Node):
-        # Append node to list of nodes if it is not already present.
+        # Append node to the list of nodes 
+        # if it is not already present.
         if node not in self._nodes:
             self._nodes.append(node)
 
     @staticmethod
     def _add_edge(node: Node, nbr: Node, max_layover: int):
         td = nbr.departure - node.arrival
-        if timedelta(hours=1) <= td <= timedelta(hours=max_layover)\
+        if timedelta(hours=1) <= td <= timedelta(hours=max_layover) \
                 and node.destination == nbr.origin:
             node.add_nbr(nbr)
 
     def _bfs(self, origin: str, destination: str, bags: int, dep_date: datetime = None):
-        """ Implementation of breadth-first search algorithm
-        as a generator function. """
+        """
+        This function implements the breadth-first search algorithm as a generator function 
+        and performs a search on graph data structure based on given parameters.
+        """
 
+        # Check if origin and destination airports are present in dataset before performing the search.
+        if destination not in self._airport_index or origin not in self._airport_index:
+            return
         if not dep_date:
-            q = [Route([n]) for n in self._nodes if n.origin == origin and n.bags_allowed >= bags]
+            q: List[Route] = [Route([n]) for n in self._nodes if n.origin == origin and n.bags_allowed >= bags]
         else:
-            q = [Route([n]) for n in self._nodes if
-                 n.origin == origin and n.departure >= dep_date and n.bags_allowed >= bags]
+            # Setting up upper limit for departure date.
+            #date_offset = dep_date + timedelta(hours=8)
+            q: List[Route] = [Route([n]) for n in self._nodes if n.origin == origin and 
+                 n.departure >= dep_date and n.bags_allowed >= bags]
+
         while q:
             route = q.pop(0)
-            if route.last_airport == destination:
+            if route.destination == destination:
                 yield route
-            for edge in route.last_node:
-                if route.is_valid_node(edge.node_to) and \
-                        edge.bags_allowed >= bags:
-                    n_route = Route(route.nodes + [edge.node_to])
+            for nbr in route.last_node:
+                if route.is_valid_node(nbr) and \
+                        nbr.bags_allowed >= bags:
+                    n_route = Route(route.nodes + [nbr])
                     q.append(n_route)
 
-    def find_routes(self, origin, destination, return_flight, stay_time, bags):
+    def find_routes(self, origin: str, destination: str, return_flight: bool, stay_time: int, bags: int):
+
         if not return_flight:
-            print_out = [RouteOutput(route, origin, destination, bags).as_dict() for route in
-                         self._bfs(origin, destination, bags)]
+            print_out = [RouteOutput(route, bags).as_dict() for route in self._bfs(origin, destination, bags)]
             if print_out:
                 print_out = sorted(print_out, key=lambda x: x['total_price'])
                 print(json.dumps(print_out, indent=4))
             else:
                 print("No flights found :'(.")
-
         else:
             routes = list()
             for route in self._bfs(origin, destination, bags):
-                dep_date = route.last_node.arrival + timedelta(hours=stay_time)
+                if not stay_time:
+                    # Passengers should have at least 1 hour before departure
+                    # flight of return trip if stay_time is not specified.
+                    dep_date = route.last_node.arrival + timedelta(hours=1)
+                else:
+                    dep_date = route.last_node.arrival + timedelta(days=stay_time)  
                 for return_route in self._bfs(destination, origin, bags, dep_date):
                     routes.append(Route(route.nodes + return_route.nodes))
-
             if routes:
-                print_out = [RouteOutput(route, origin, origin, bags).as_dict() for route in routes]
+                print_out = [RouteOutput(route, bags).as_dict() for route in routes]
                 print_out = sorted(print_out, key=lambda x: x['total_price'])
                 print(json.dumps(print_out, indent=4))
             else:
