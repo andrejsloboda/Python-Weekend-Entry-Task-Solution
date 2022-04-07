@@ -7,11 +7,11 @@ if TYPE_CHECKING:
 
 
 class RouteOutput:
-    def __init__(self,route: 'Route', bag_count: int) -> None:
-        self.route = route
-        self.origin = route.origin
-        self.destination = route.destination
-        self.bag_count = bag_count
+    def __init__(self, route: 'Route', bag_count: int) -> None:
+        self._route = route
+        self._origin = route.origin
+        self._destination = route.destination
+        self._bag_count = bag_count
 
     @staticmethod
     def _get_route_total_price(route: 'Route', bag_count: int) -> float:
@@ -26,13 +26,13 @@ class RouteOutput:
 
     def as_dict(self):
         return {
-            "flights": [node.as_dict() for node in self.route.nodes],
-            "origin": self.origin,
-            "destination": self.destination,
-            "bags_allowed": min([int(node.bags_allowed) for node in self.route.nodes]),
-            "bags_count": self.bag_count,
-            "total_price": self._get_route_total_price(self.route, self.bag_count),
-            "travel_time": str(self.route._travel_time)
+            "flights": [node.as_dict() for node in self._route.nodes],
+            "origin": self._origin,
+            "destination": self._destination,
+            "bags_allowed": min([int(node.bags_allowed) for node in self._route.nodes]),
+            "bags_count": self._bag_count,
+            "total_price": self._get_route_total_price(self._route, self._bag_count),
+            "travel_time": str(self._route._travel_time)
         }
 
 
@@ -71,8 +71,12 @@ class Route:
 
     @property
     def last_node(self):
-        return self._nodes[-1]
+        return self.nodes[-1]
 
     @property
     def nodes(self):
         return self._nodes
+    
+    @property
+    def travel_time(self):
+        return self._travel_time
