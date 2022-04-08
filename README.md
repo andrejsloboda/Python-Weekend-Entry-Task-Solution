@@ -59,7 +59,7 @@ optional arguments to adjust output based on user preferences:
 | `destination`  | string  | Destination airport IATA code |                              |
 | `--bags`       | integer | Number of requested bags      | Optional (defaults to 0)     |
 | `--return_flight`     | boolean | Return flight                 | Optional (defaults to false) |
-| `--stay`       | integer | Minimum number of hours to stay  | Optional (defaults to1) |  
+| `--stay`       | integer | Minimum number of days to stay  | Optional (defaults to1) |  
 | `--max_layover`| integer | Maximum layover time between flights in hours   | Optional (defaults to 6)|
 
 [Back To The Top](#python-weekend-entry-task-solution)
