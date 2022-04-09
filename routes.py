@@ -1,5 +1,6 @@
 from __future__ import annotations
-from datetime import datetime
+from datetime import datetime, timedelta
+from importlib.util import set_loader
 from typing import List
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -41,9 +42,9 @@ class Route:
         self._nodes = nodes
         self._visited_airports = list()
         self._travel_time = None
-        self._get_route_travel_time()
         self._get_visited_airports()
-    
+        self._get_route_travel_time()
+
     def is_valid_node(self, node: Node) -> bool:
         if node.destination not in self._visited_airports:
             return True
@@ -55,12 +56,19 @@ class Route:
             self._visited_airports.append(node.origin)
             self._visited_airports.append(node.destination)
 
-    def _get_route_travel_time(self) -> datetime:
+    def _get_route_travel_time(self) -> timedelta:
 
         start_time = self._nodes[0].departure
         end_time = self._nodes[-1].arrival
         self._travel_time = end_time - start_time
-  
+
+    def __add__(self, other: Route):
+        temp = Route(self.nodes + other.nodes)
+        temp.travel_time = self.travel_time + other.travel_time
+        del self
+        del other
+        return temp
+    
     @property
     def destination(self):
         return self._nodes[-1].destination
@@ -76,7 +84,15 @@ class Route:
     @property
     def nodes(self):
         return self._nodes
+
+    @nodes.setter
+    def nodes(self, new):
+        self._nodes = new
     
     @property
     def travel_time(self):
         return self._travel_time
+
+    @travel_time.setter
+    def travel_time(self, new):
+        self._travel_time = new
