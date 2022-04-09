@@ -22,7 +22,7 @@ class Node:
         self.bags_allowed = flight.bags_allowed
         self._edges = list()
 
-    def add_nbr(self, nbr):
+    def add_nbr(self, nbr: 'Node'):
         self._edges.append(nbr)
 
     def __iter__(self):
