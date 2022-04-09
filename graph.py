@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import re
 import json
 
+
 class Node:
     """ 
     This class represents node of graph that contains
@@ -91,6 +92,12 @@ class Graph:
             if not destination_re.match(f['destination']):
                 raise ValueError("Incorrect destination value format.")
 
+            if f['origin'] not in self._airport_index:
+                self._airport_index.append(f['origin'])
+
+            if f['destination'] not in self._airport_index:
+                self._airport_index.append(f['destination'])
+
             try:
                 # Try to change format of data and store it.
                 flight_data.flight_no = f['flight_no']
@@ -103,12 +110,6 @@ class Graph:
                 flight_data.bags_allowed = int(f['bags_allowed'])
 
                 self._flights.append(flight_data)
-
-                if f['origin'] not in self._airport_index:
-                    self._airport_index.append(f['origin'])
-
-                if f['destination'] not in self._airport_index:
-                    self._airport_index.append(f['destination'])
 
             except ValueError:
                 raise ValueError('Please check the formats in csv file: \n \
@@ -146,15 +147,13 @@ class Graph:
         This function implements the breadth-first search algorithm as a generator function 
         and performs a search on graph data structure based on given parameters.
         """
-
-        # Check if origin and destination airports are present in dataset before performing the search.
-        if destination not in self._airport_index or origin not in self._airport_index:
-            return
+    
         if not dep_date:
             q: List[Route] = [Route([n]) for n in self._nodes if n.origin == origin and n.bags_allowed >= bags]
+
         else:
-            # Setting up upper limit for departure date.
-            #date_offset = dep_date + timedelta(hours=8)
+            # Setting up a default upper limit for departure date in case of return flight.
+            # date_offset = dep_date + timedelta(hours=8)
             q: List[Route] = [Route([n]) for n in self._nodes if n.origin == origin and 
                  n.departure >= dep_date and n.bags_allowed >= bags]
 
@@ -169,15 +168,11 @@ class Graph:
                     q.append(n_route)
 
     def find_routes(self, origin: str, destination: str, return_flight: bool, stay_time: int, bags: int):
+        # Check if origin and destination airports are present in dataset before performing the search.
+        if destination not in self._airport_index or origin not in self._airport_index:
+            return
 
-        if not return_flight:
-            print_out = [RouteOutput(route, bags).as_dict() for route in self._bfs(origin, destination, bags)]
-            if print_out:
-                print_out = sorted(print_out, key=lambda x: x['total_price'])
-                print(json.dumps(print_out, indent=4))
-            else:
-                print("No flights found :'(.")
-        else:
+        if return_flight:
             routes = list()
             for route in self._bfs(origin, destination, bags):
                 if not stay_time:
@@ -187,9 +182,17 @@ class Graph:
                 else:
                     dep_date = route.last_node.arrival + timedelta(days=stay_time)  
                 for return_route in self._bfs(destination, origin, bags, dep_date):
-                    routes.append(Route(route.nodes + return_route.nodes))
+                    routes.append(route + return_route)
             if routes:
                 print_out = [RouteOutput(route, bags).as_dict() for route in routes]
+                print_out = sorted(print_out, key=lambda x: x['total_price'])
+                print(json.dumps(print_out, indent=4))
+            else:
+                print("No flights found :'(.")
+
+        else:
+            print_out = [RouteOutput(route, bags).as_dict() for route in self._bfs(origin, destination, bags)]
+            if print_out:
                 print_out = sorted(print_out, key=lambda x: x['total_price'])
                 print(json.dumps(print_out, indent=4))
             else:
