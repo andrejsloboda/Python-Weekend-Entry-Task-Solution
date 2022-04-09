@@ -174,7 +174,7 @@ python -m solution example0.csv WIW RFZ --bags 1 --return
         "bags_allowed": 2,
         "bags_count": 1,
         "total_price": 360.0,
-        "travel_time": "11:00:00"
+        "travel_time": "9:00:00"
     },
     {
         "flights": [
@@ -204,7 +204,7 @@ python -m solution example0.csv WIW RFZ --bags 1 --return
         "bags_allowed": 2,
         "bags_count": 1,
         "total_price": 360.0,
-        "travel_time": "3 days, 11:00:00"
+        "travel_time": "9:00:00"
     },
     {
         "flights": [
@@ -234,7 +234,7 @@ python -m solution example0.csv WIW RFZ --bags 1 --return
         "bags_allowed": 2,
         "bags_count": 1,
         "total_price": 360.0,
-        "travel_time": "8 days, 11:00:00"
+        "travel_time": "9:00:00"
     },
     {
         "flights": [
@@ -264,7 +264,7 @@ python -m solution example0.csv WIW RFZ --bags 1 --return
         "bags_allowed": 2,
         "bags_count": 1,
         "total_price": 360.0,
-        "travel_time": "11:00:00"
+        "travel_time": "9:00:00"
     },
     {
         "flights": [
@@ -294,7 +294,7 @@ python -m solution example0.csv WIW RFZ --bags 1 --return
         "bags_allowed": 2,
         "bags_count": 1,
         "total_price": 360.0,
-        "travel_time": "5 days, 11:00:00"
+        "travel_time": "9:00:00"
     },
     {
         "flights": [
@@ -324,7 +324,7 @@ python -m solution example0.csv WIW RFZ --bags 1 --return
         "bags_allowed": 2,
         "bags_count": 1,
         "total_price": 360.0,
-        "travel_time": "11:00:00"
+        "travel_time": "9:00:00"
     }
 ]
 ```
