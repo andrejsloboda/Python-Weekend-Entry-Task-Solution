@@ -138,7 +138,7 @@ python -m solution example0.csv WIW RFZ
 ]
 ```
 [Back To The Top](#python-weekend-entry-task-solution)  
-#### A search for return flight with number of requested bags:
+#### A search for return flight with the number of requested bags:
 
 ```bash
 python -m solution example0.csv WIW RFZ --bags 1 --return
