@@ -11,6 +11,7 @@ class Node:
     This class represents node of graph that contains
     information about single flight.
     """
+
     def __init__(self, flight: namedtuple):
         self.flight_no = flight.flight_no
         self.origin = flight.origin
@@ -43,11 +44,13 @@ class Node:
 
 class Graph:
     """ 
-    A class representing graph data structure. Nodes are represented
-    as a single flight. This class contains methods for parsing input
+    A class representing a graph data structure. Nodes are represented
+    as a single flight. And are connected through origin and destination 
+    airports. This class contains methods for parsing input
     data, constructing graph data structure and performing search for
     flight routes.
     """
+
     def __init__(self, flights, max_layover: int = 6) -> None:
         self._nodes = list()
         self._flights = list()
@@ -83,6 +86,7 @@ class Graph:
                                         arrival base_price bag_price bags_allowed')
 
             # Check flight_no, origin and destination with regex
+            # separately
             if not flight_no_re.match(f['flight_no']):
                 raise ValueError("Incorrect flight_no value format.")
 
@@ -92,6 +96,9 @@ class Graph:
             if not destination_re.match(f['destination']):
                 raise ValueError("Incorrect destination value format.")
 
+            # Check if origin and destination airports
+            # are not already in airport index and add
+            # them.
             if f['origin'] not in self._airport_index:
                 self._airport_index.append(f['origin'])
 
@@ -147,15 +154,15 @@ class Graph:
         This function implements the breadth-first search algorithm as a generator function 
         and performs a search on graph data structure based on given parameters.
         """
-    
+
         if not dep_date:
             q: List[Route] = [Route([n]) for n in self._nodes if n.origin == origin and n.bags_allowed >= bags]
 
         else:
             # Setting up a default upper limit for departure date in case of return flight.
             # date_offset = dep_date + timedelta(hours=8)
-            q: List[Route] = [Route([n]) for n in self._nodes if n.origin == origin and 
-                 n.departure >= dep_date and n.bags_allowed >= bags]
+            q: List[Route] = [Route([n]) for n in self._nodes if n.origin == origin and
+                              n.departure >= dep_date and n.bags_allowed >= bags]
 
         while q:
             route = q.pop(0)
@@ -170,6 +177,7 @@ class Graph:
     def find_routes(self, origin: str, destination: str, return_flight: bool, stay_time: int, bags: int):
         # Check if origin and destination airports are present in dataset before performing the search.
         if destination not in self._airport_index or origin not in self._airport_index:
+            print('No flights found for this combination of airports. Check if the airports are present in input data.')
             return
 
         if return_flight:
@@ -180,7 +188,8 @@ class Graph:
                     # flight of return trip if stay_time is not specified.
                     dep_date = route.last_node.arrival + timedelta(hours=1)
                 else:
-                    dep_date = route.last_node.arrival + timedelta(days=stay_time)  
+                    dep_date = route.last_node.arrival + timedelta(days=stay_time)
+                    # Search for all return routes for each route individually.
                 for return_route in self._bfs(destination, origin, bags, dep_date):
                     routes.append(route + return_route)
             if routes:
