@@ -1,10 +1,9 @@
 from typing import List
 from routes import Route, RouteOutput
-from collections import namedtuple
+from collections import defaultdict, deque
 from datetime import datetime, timedelta
 import re
 import json
-
 
 class Node:
     """ 
@@ -12,19 +11,20 @@ class Node:
     information about single flight.
     """
 
-    def __init__(self, flight: namedtuple):
-        self.flight_no = flight.flight_no
-        self.origin = flight.origin
-        self.destination = flight.destination
-        self.departure = flight.departure
-        self.arrival = flight.arrival
-        self.base_price = flight.base_price
-        self.bag_price = flight.bag_price
-        self.bags_allowed = flight.bags_allowed
+    def __init__(self, flight_no, origin, destination, departure, arrival, base_price, bag_price, bags_allowed):
+        self.flight_no = flight_no
+        self.origin = origin
+        self.destination = destination
+        self.departure = departure
+        self.arrival = arrival
+        self.base_price = base_price
+        self.bag_price = bag_price
+        self.bags_allowed = bags_allowed
         self._edges = list()
 
     def add_nbr(self, nbr: 'Node'):
-        self._edges.append(nbr)
+        if nbr not in self._edges:
+            self._edges.append(nbr)
 
     def __iter__(self):
         return iter(self._edges)
@@ -50,10 +50,8 @@ class Graph:
     data, constructing graph data structure and performing search for
     flight routes.
     """
-
-    def __init__(self, flights, max_layover: int = 6) -> None:
-        self._nodes = list()
-        self._flights = list()
+    def __init__(self, flights, max_layover: int) -> None:
+        self._nodes = defaultdict(list)
         self._airport_index = list()
         self._parse_input_data(flights)
         self._create_graph(max_layover)
@@ -68,12 +66,10 @@ class Graph:
         columns = ['flight_no', 'origin', 'destination', 'departure', 'arrival',
                    'base_price', 'bag_price', 'bags_allowed']
         fieldnames = flights.fieldnames
-
         # Initialize regex to check the flight_no, origin, and destination format.
         flight_no_re = re.compile(r"[A-Z]{2}[0-9]{3}")
         origin_re = re.compile(r"[A-Z]{3}")
         destination_re = re.compile(r"[A-Z]{3}")
-
         # Iterate through column names in csv files and check if they have correct names.
         for col, fn in zip(columns, fieldnames):
             if re.match(col, fn) is not None:
@@ -82,9 +78,6 @@ class Graph:
                 raise ValueError('Column name "{}" should be "{}."'.format(fn, col))
 
         for f in flights:
-            flight_data = namedtuple('Flight', 'flight_no origin destination departure\
-                                        arrival base_price bag_price bags_allowed')
-
             # Check flight_no, origin and destination with regex
             # separately
             if not flight_no_re.match(f['flight_no']):
@@ -95,28 +88,20 @@ class Graph:
 
             if not destination_re.match(f['destination']):
                 raise ValueError("Incorrect destination value format.")
-
-            # Check if origin and destination airports
-            # are not already in airport index and add
-            # them.
-            if f['origin'] not in self._airport_index:
-                self._airport_index.append(f['origin'])
-
-            if f['destination'] not in self._airport_index:
-                self._airport_index.append(f['destination'])
-
+            
+            # Try to change datatypes, initialize node and 
+            # add it to self._nodes
             try:
-                # Try to change format of data and store it.
-                flight_data.flight_no = f['flight_no']
-                flight_data.origin = f['origin']
-                flight_data.destination = f['destination']
-                flight_data.departure = datetime.strptime(f['departure'], '%Y-%m-%dT%H:%M:%S')
-                flight_data.arrival = datetime.strptime(f['arrival'], '%Y-%m-%dT%H:%M:%S')
-                flight_data.base_price = float(f['base_price'])
-                flight_data.bag_price = float(f['bag_price'])
-                flight_data.bags_allowed = int(f['bags_allowed'])
+                node = Node(f['flight_no'],
+                    f['origin'],
+                    f['destination'],
+                    datetime.fromisoformat(f['departure']),
+                    datetime.fromisoformat(f['arrival']),
+                    float(f['base_price']),
+                    float(f['bag_price']),
+                    int(f['bags_allowed']))
 
-                self._flights.append(flight_data)
+                self._nodes[f['origin']].append(node)
 
             except ValueError:
                 raise ValueError('Please check the formats in csv file: \n \
@@ -126,46 +111,28 @@ class Graph:
                             base_price: float \n \
                             bag_price: float')
 
-    def _create_graph(self, max_layover):
-        # Create list of nodes.
-        for flight in self._flights:
-            self._nodes.append(Node(flight))
-
+    def _create_graph(self, max_layover: int):
         # Add neighbours to each node.
-        for node_a in self._nodes:
-            for node_b in self._nodes:
-                self._add_edge(node_a, node_b, max_layover)
-
-    def _add_node(self, node: Node):
-        # Append node to the list of nodes 
-        # if it is not already present.
-        if node not in self._nodes:
-            self._nodes.append(node)
-
-    @staticmethod
-    def _add_edge(node: Node, nbr: Node, max_layover: int):
-        td = nbr.departure - node.arrival
-        if timedelta(hours=1) <= td <= timedelta(hours=max_layover) \
-                and node.destination == nbr.origin:
-            node.add_nbr(nbr)
-
+        for key in self._nodes.keys():
+            for node in self._nodes[key]:
+                for nbr in self._nodes[node.destination]:
+                    td = nbr.departure - node.arrival
+                    if timedelta(hours=1) <= td <= timedelta(hours=max_layover):
+                        node.add_nbr(nbr)
+            
     def _bfs(self, origin: str, destination: str, bags: int, dep_date: datetime = None):
         """
         This function implements the breadth-first search algorithm as a generator function 
         and performs a search on graph data structure based on given parameters.
         """
-
         if not dep_date:
-            q: List[Route] = [Route([n]) for n in self._nodes if n.origin == origin and n.bags_allowed >= bags]
-
+            q = deque([Route([n]) for n in self._nodes[origin] if n.bags_allowed >= bags])
         else:
-            # Setting up a default upper limit for departure date in case of return flight.
-            # date_offset = dep_date + timedelta(hours=8)
-            q: List[Route] = [Route([n]) for n in self._nodes if n.origin == origin and
-                              n.departure >= dep_date and n.bags_allowed >= bags]
-
+            # Setting up a default upper limit for departure date in case of return flight(Optional).
+            # date_offset = dep_date + timedelta(hours=24)
+            q = deque([Route([n]) for n in self._nodes[origin] if dep_date <= n.departure and n.bags_allowed >= bags])
         while q:
-            route = q.pop(0)
+            route = q.pop()
             if route.destination == destination:
                 yield route
             for nbr in route.last_node:
@@ -176,7 +143,7 @@ class Graph:
 
     def find_routes(self, origin: str, destination: str, return_flight: bool, stay_time: int, bags: int):
         # Check if origin and destination airports are present in dataset before performing the search.
-        if destination not in self._airport_index or origin not in self._airport_index:
+        if destination not in self._nodes.keys() or origin not in self._nodes.keys():
             print('No flights found for this combination of airports. Check if the airports are present in input data.')
             return
 
@@ -206,3 +173,4 @@ class Graph:
                 print(json.dumps(print_out, indent=4))
             else:
                 print("No flights found :'(.")
+        
